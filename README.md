@@ -38,4 +38,5 @@ The instances can be found in this [Google drive link](https://drive.google.com/
 
 ## Calling the executable
 
-You can run the code by using one of the sample commands provided in `run_slr.sh`
+You can run the code by using one of the sample commands provided in `run_slr_instances.sh`
+
