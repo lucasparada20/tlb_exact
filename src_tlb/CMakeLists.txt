@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Hard code the path to the CPLEX directory
-set(CPLEX_DIR "/home/mumu2021/CPLEX_Studio221")
+set(CPLEX_DIR "/some/path/to/Cplex")
 message("Using CPLEX_DIR = ${CPLEX_DIR}")
 
 # Include directories for CPLEX
@@ -42,7 +42,7 @@ foreach(dir IN LISTS CPLEX_INCLUDE_DIRS CPLEX_LIBRARY_DIRS)
 endforeach()
 
 # === LEMON ===
-set(LEMON_DIR "/home/mumu2021/work/sbrpod/code/lemon-1.3.1")
+set(LEMON_DIR "/some/path/to/lemon-1.3.1")
 message("Using LEMON_DIR = ${LEMON_DIR}")
 
 add_library(LEMON INTERFACE)
