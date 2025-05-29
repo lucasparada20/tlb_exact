@@ -13,3 +13,10 @@ build/exec_tlb mcfp_solver=3 instance_format=trips \
     model=3 \
     re_file=re.txt \
     output_file=targets.txt
+
+build/exec_tlb mcfp_solver=3 instance_format=trips \
+    instance_file=some/path/to/newyork_n2176_e15_0.txt \
+    scenarios_file_name=some/path/to/newyork_e400.txt \
+    model=3 \
+    re_file=re.txt \
+    output_file=targets.txt
