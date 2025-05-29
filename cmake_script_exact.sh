@@ -24,12 +24,6 @@ fi
 echo "Building executable with configuration: ${BUILD_TYPE}"
 echo "OpenMP enabled: ${USE_OMP}"
 
-
-# Cannot be done here because this will only change the environment variable locally ...
-#if [ "${USE_OMP}" = "ON" ]; then
-#	export OMP_NUM_THREADS="$(nproc --all)"
-#fi
-
 mkdir -p build
 cd build 
 
