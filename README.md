@@ -35,3 +35,7 @@ The TLB uses `OpenMP` which is enabled by default in the compiler.
 ## Instances
 
 The instances can be found in this [Google drive link](https://drive.google.com/file/d/1Q-0E389K-WTVqK05zVU2rITzFuYCQLoM/view?usp=sharing). These instances are very large-sized. Smaller instances can be found in my other repo for the [TLB generator](https://github.com/lucasparada20/tlb_generator).
+
+## Calling the executable
+
+You can run the code by using one of the sample commands provided in `run_slr.sh`
