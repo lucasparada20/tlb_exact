@@ -4,7 +4,6 @@
 #include <iostream>
 #include <cstdio>
  
-
 //needs to receive the vector of capacities h_i
 double DP::GetCostDP(std::vector<int>& h, int Qtot, std::vector<int>& y) 
 {
@@ -23,7 +22,7 @@ double DP::GetCostDP(std::vector<int>& h, int Qtot, std::vector<int>& y)
 		for (int q = 0; q <= Qtot; q++)
 			for (int x_val = 0; x_val <= std::min(q, (int)std::round(0.5*hh[i])); x_val++)
 			{
-				double cost = std::pow(x_val - hh[i], 2) + dp[i - 1][q - x_val];
+				double cost = std::pow(x_val - (int)std::round(0.5*hh[i]), 2) + dp[i - 1][q - x_val];
 				if (cost < dp[i][q])
 				{
 					dp[i][q] = cost;
@@ -58,11 +57,12 @@ double DP::GetCostDP(std::vector<int>& h, int Qtot, std::vector<int>& y)
 
 	// Reconstruction of y and x
 	y.resize(n);
-	y[n-1] = xmin;
+	y[n-1] = std::max(0, std::min(xmin, h[n-1]));
+	std::min(xmin,h[n-1]);
 	int q = qmin - xmin;
 	for(int i=n-2;i>=0;i--)
 	{
-		y[i] = x[i][q];
+		y[i] = std::max(0, std::min(x[i][q],h[i]));
 		q -= x[i][q];
 	}
 
