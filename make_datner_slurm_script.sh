@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# This script builds TLB scripts to be launched in high-performance computing systems i.e., SLURM
+# The model number need to be hard coded
+
 # Define directories
 INSTANCE_DIR=~/work/tlb/instances_datner
 TARGETS_DIR=~/work/tlb/targets_datner
