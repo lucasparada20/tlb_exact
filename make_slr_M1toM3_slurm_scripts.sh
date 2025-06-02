@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# This script builds TLB scripts to be launched in high-performance computing systems i.e., SLURM
+# The model number need to be hard coded
+
 # Define directories
 INSTANCE_DIR=~/work/sbrpod/instances
 TARGETS_DIR=~/work/tlb/targets_slr
@@ -12,7 +15,7 @@ mkdir -p "$SCRIPTS_DIR"
 
 script_count=0
 
-model=7
+model=1
 
 # Loop through each *_nXXX_eXXX.txt file
 for instance_file in "$INSTANCE_DIR"/*_n*_e*.txt; do
@@ -36,7 +39,7 @@ for instance_file in "$INSTANCE_DIR"/*_n*_e*.txt; do
     cat > "$script_name" <<EOF
 #!/bin/sh -l
 #SBATCH --mem=30G
-#SBATCH --time=5:00:00
+#SBATCH --time=4:00:00
 #SBATCH --account=def-cotej
 #SBATCH --cpus-per-task=64
 export OMP_NUM_THREADS=\$SLURM_CPUS_PER_TASK
