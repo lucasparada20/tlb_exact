@@ -31,15 +31,19 @@ RecourseCalculation::RecourseCalculation(Scenarios * _scs, Prob * _prob) : scs(_
 	
 	
 	graphObjects.resize(scs->GetScenarioCount(),0);	
-	clock_t start_time = clock();
+	double start_time = omp_get_wtime();
 	total_node_count = 0; total_arc_count = 0; total_trip_count = 0;
+	
+	#ifdef USE_OMP
+		#pragma omp parallel for reduction(+:total_node_count) reduction(+:total_arc_count) reduction(+:total_trip_count)
+	#endif	
 	for(int e=0;e<scs->GetScenarioCount();e++)
 	{
-		clock_t start_loop_time = clock();
+		double start_loop_time = omp_get_wtime();
 		graphObjects[e] = new ScenarioGraph(prob,scs->GetScenarioObject(e));
 		
-		clock_t end_loop_time = clock();
-		double elapsedSecondsLoop = (double)(end_loop_time - start_loop_time)/CLOCKS_PER_SEC;
+		double end_loop_time = omp_get_wtime();
+		double elapsedSecondsLoop = end_loop_time - start_loop_time;
 		printf("Elapsed time to build scenario:%d graph:%.1lf Nodes:%d HoldingArcs:%d TripArcs:%d TotalArcs:%d Size of arc:%lu\n",e,elapsedSecondsLoop,graphObjects[e]->GetNodeCount(),graphObjects[e]->GetNetworkArcCount(),graphObjects[e]->GetODtripCount(),graphObjects[e]->GetArcCount(),sizeof(MCF_arc));
 		
 		total_node_count += graphObjects[e]->GetNodeCount();
@@ -49,8 +53,8 @@ RecourseCalculation::RecourseCalculation(Scenarios * _scs, Prob * _prob) : scs(_
 		//sprintf(filename,"NewGraph%d.dot",e);
 		//graphObjects[e]->PrintGraph(filename);
 	}	
-	clock_t end_time = clock();
-	double elapsedSeconds = (double)(end_time - start_time)/CLOCKS_PER_SEC;
+	double end_time = omp_get_wtime();
+	double elapsedSeconds = end_time - start_time;
 	printf("Elapsed time to build ALL required mcf graphs:%.1lf\n",elapsedSeconds);
 	printf("Total Nodes:%d Total Arcs:%d Avg Nodes:%.1lf Arcs:%.1lf AvgTrips:%.2lf ... \n",total_node_count,total_arc_count,total_node_count/(double)scs->GetScenarioCount(),total_arc_count/(double)scs->GetScenarioCount(),total_trip_count/(double)scs->GetScenarioCount());
 	graph_type = 7; // SingleSourceRecourse
@@ -723,4 +727,134 @@ void RecourseCalculation::Calculate(int bound_type, std::vector<std::vector<int>
         }
 		//printf("%d %s bound:%d\n",i,(bound_type==Lb)? "Lb":"Ub", max_or_min[i]);
     }
+}
+
+
+struct Event
+{
+	int trip_idx; int16_t type; int32_t time;
+	
+	Event(int _trip_idx, int16_t _type, int32_t _time) : 
+		trip_idx(_trip_idx),
+		type(_type),
+		time(_time) {}
+	void Show(){ printf("Ev trip:%d type:%d time:%d\n",trip_idx,type,time); }
+};
+
+std::vector<double> RecourseCalculation::CalculateLb(std::vector<int> & targets)
+{	
+	std::vector<int> accepted_pickups(scs->GetScenarioCount(),0);
+	std::vector<int> accepted_drops(scs->GetScenarioCount(),0);
+	std::vector<int> rejected_pickups(scs->GetScenarioCount(),0);
+	std::vector<int> rejected_drops(scs->GetScenarioCount(),0);
+	
+	printf("CalculateLb:\n");
+	for(size_t i=0;i<targets.size();i++)
+		printf("t%zu:%d ",i,targets[i]);
+	printf("\n");
+	
+	for(int e=0;e<scs->GetScenarioCount();e++)
+	{		
+		Scenario * sce = scs->GetScenarioObject(e);
+		
+		std::vector<Event> events;
+		events.reserve( 2*sce->GetODTripCount() );
+		
+		for(int i=0;i<sce->GetODTripCount();i++)
+		{
+			events.emplace_back( i, 1, sce->GetODTrip(i)->start_t );
+			events.emplace_back( i, 2, sce->GetODTrip(i)->end_t );
+		}
+		
+		std::sort(events.begin(), events.end(), [](const Event & ev1, const Event & ev2)
+		{
+			return ev1.time < ev2.time;
+		});
+		
+		std::vector<int> bikes = targets;
+		std::vector<int> reserved_spots((int)targets.size(),0);
+		std::vector<bool> accepted((int)sce->GetODTripCount(),false);
+		
+		for(size_t i=0;i<events.size();i++)
+		{
+			if(events[i].trip_idx > sce->GetODTripCount())
+			{
+				printf("Trips:%d wrongTrip:\n",sce->GetODTripCount());
+				events[i].Show(); exit(1);
+			}
+			
+			//events[i].Show();
+			//sce->GetODTrip( events[i].trip_idx )->Show();
+			
+			int pickup_stat = sce->GetODTrip( events[i].trip_idx )->start_no - 1;
+			int drop_stat = sce->GetODTrip( events[i].trip_idx )->end_no - 1;
+			
+			if(pickup_stat > (int)bikes.size() || drop_stat > (int)bikes.size())
+			{
+				printf("p:%d d:%d bikesSize:%d\n",
+						pickup_stat, drop_stat, (int)bikes.size());
+				exit(1);
+			}
+		
+			
+			bool accepted_p = false; bool accepted_d = false; // To dbg
+			//Accepting pickups
+			if(events[i].type == 1 && 
+				bikes[ pickup_stat ] > 0 &&
+				bikes[ drop_stat ] + reserved_spots[ drop_stat ] + 1 <= prob->GetNode( drop_stat )->stationcapacity)
+				{
+					accepted_pickups[e]++;
+					bikes[ pickup_stat ]--;
+					reserved_spots[ drop_stat ]++;
+					accepted_p = true;
+					accepted[ events[i].trip_idx ] = true;
+				}
+				else 
+				{
+					if (bikes[ pickup_stat ] == 0) 
+						rejected_pickups[e]++;
+					if (bikes[ drop_stat ] + reserved_spots[ drop_stat ] + 1 > prob->GetNode( drop_stat )->stationcapacity)
+						rejected_drops[e]++;
+				}
+			//Accepting drops
+			if(events[i].type == 2 &&
+				accepted[ events[i].trip_idx ]
+				//reserved_spots[ drop_stat ] > 0 &&
+				//bikes[ drop_stat ] + reserved_spots[ drop_stat ] + 1 <= prob->GetNode( drop_stat )->stationcapacity
+				)
+				{
+					accepted_drops[e]++;
+					bikes[ drop_stat ]++;
+					reserved_spots[ drop_stat ]--;
+					accepted_d = true;
+				}			
+		}
+		printf("e:%d events:%zu trips:%d Accepted(p,d):(%d,%d)\n",
+				e,events.size(),sce->GetODTripCount(),accepted_pickups[e],accepted_drops[e]);
+
+	}
+	
+	int total_accepted_pickups = std::accumulate(accepted_pickups.begin(), accepted_pickups.end(), 0);
+	int total_accepted_drops = std::accumulate(accepted_drops.begin(), accepted_drops.end(), 0);
+	int total_rejected_pickups = std::accumulate(rejected_pickups.begin(), rejected_pickups.end(), 0);
+	int total_rejected_drops = std::accumulate(rejected_drops.begin(), rejected_drops.end(), 0);
+
+	
+	double lb = (total_accepted_pickups + total_accepted_drops) / (2.0*(double)scs->GetScenarioCount()); // The average accepted requests
+	double avg_rejected_pickups = total_rejected_pickups / (double)scs->GetScenarioCount();
+	double avg_rejected_drops = total_rejected_drops / (double)scs->GetScenarioCount();
+	
+	printf("Avg accepted pickups:%.1lf drops:%.1lf lb:%.1lf rej_pick:%.1lf rej_drop:%.1lf\n",
+			total_accepted_pickups/(double)scs->GetScenarioCount(), 
+			total_accepted_drops/(double)scs->GetScenarioCount(),
+			lb,
+			avg_rejected_pickups,
+			avg_rejected_drops);
+
+	std::vector<double> lbs(3,-1.0);
+	lbs[0] = lb;
+	lbs[1] = avg_rejected_pickups;
+	lbs[2] = avg_rejected_drops;
+	
+	return lbs;
 }

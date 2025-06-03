@@ -9,9 +9,9 @@ public:
     Trip() : start_no(-1), end_no(-1), start_t(-1), end_t(-1), idx(-1) {}
     int16_t start_no;
     int16_t end_no;
-    int16_t start_t;
-    int16_t end_t;
-    int16_t idx;
+    int32_t start_t;
+    int32_t end_t;
+    int idx;
     
     void Show()
     {

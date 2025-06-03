@@ -79,7 +79,7 @@ void LoadTLB::LoadScenarios(Prob * pr, Scenarios * scs, char * filename)
 
 	printf("Instance format to read:%c\n",Parameters::GetInstanceFormat());
 	std::map<int,std::vector<Trip>> ODtrip_map;
-	int16_t idx=0;
+	int idx=0;
 	char line[100];
 	while (fgets(line, 100, ff)) 
 	{
@@ -106,7 +106,7 @@ void LoadTLB::LoadScenarios(Prob * pr, Scenarios * scs, char * filename)
 			{
 				printf("Could not match bss_id of:%s in Load and instance format:%c\nExiting ...",line,Parameters::GetInstanceFormat()); exit(1);
 			}
-			OD.start_t = (int16_t)start_t; OD.end_t = (int16_t)end_t;
+			OD.start_t = (int32_t)start_t; OD.end_t = (int32_t)end_t;
 			if(OD.start_t == end_t)
 			{
 				continue; //OD.Show(); throw MyException("Trip with same start, end time");
