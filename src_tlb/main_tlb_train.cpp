@@ -140,6 +140,18 @@ int main(int arg, char ** argv)
 	printf("Scenarios for UnbiasedEstimator_DP:%.2lf time_taken:%.1lf\n",
 			UnbiasedEstimator_DP,end_time-start_time);
 	sol.SetUnbiasedDP( UnbiasedEstimator_DP );			
+
+	//Trips Lb	
+	std::vector<double> lbs = other_r.CalculateLb(sol.GetExactTargets());
+	sol.SetUnbiasedLb(lbs[0]);
+	sol.SetUnbiasedRejectedPicks(lbs[1]);
+	sol.SetUnbiasedRejectedDrops(lbs[2]);
+	
+	printf("Unbiased Lb:%.1lf Ub:%.1lf Rejected Picks:%.1lf Drops:%.1lf\n",
+		sol.GetUnbiasedLb(),
+		sol.GetUnbiasedExact(),
+		sol.GetUnbiasedRejectedPicks(),
+		sol.GetUnbiasedRejectedDrops());
 	
 	//the names need to be something like: n%d_e%d.txt
 	sol.WriteReFile(Parameters::GetReFileName());
