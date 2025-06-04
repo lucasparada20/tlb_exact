@@ -237,9 +237,9 @@ class Sol
 				
 				outputFile << nb_benders_cuts << ";" << cplex_nodes << ";";
 				
-				if(Parameters::UnbiasedEstimator())
+				//if(Parameters::UnbiasedEstimator()) //Main.cpp will always compute the unbiased estimator now ...
 				{
-					outputFile << std::fixed << std::setprecision(2) << Avg_trips_400 << ";" << WS_in400 << ";" << UnbiasedEstimator_WS << ";" << UnbiasedEstimator_Exact << ";" << UnbiasedEstimator_DP << ";";
+					outputFile << std::fixed << std::setprecision(2) << Avg_trips_400 << ";" << WS_in400 << ";" << UnbiasedEstimator_WS << ";" << UnbiasedEstimator_Exact << ";" << UnbiasedEstimator_DP << ";" << UnbiasedEstimator_LB << ";" << UnbiasedRejectedPicks << ";" << UnbiasedRejectedDrops << ";";
 				}
 				if(Parameters::CalculateAvgScenario())
 				{
@@ -288,7 +288,16 @@ class Sol
 		void SetWS400(double d){ WS_in400=d; }
 		void SetUnbiasedWS(double d){ UnbiasedEstimator_WS=d;}
 		void SetUnbiasedExact(double d){ UnbiasedEstimator_Exact=d ;}
+		double GetUnbiasedExact(){ return UnbiasedEstimator_Exact;}
+		void SetUnbiasedLb(double d){ UnbiasedEstimator_LB=d; }
+		double GetUnbiasedLb(){ return UnbiasedEstimator_LB; }
 		void SetUnbiasedDP(double d){ UnbiasedEstimator_DP=d ;}
+		
+		void SetUnbiasedRejectedPicks(double d){ UnbiasedRejectedPicks = d;}
+		void SetUnbiasedRejectedDrops(double d){ UnbiasedRejectedDrops = d;}
+		double GetUnbiasedRejectedPicks(){ return UnbiasedRejectedPicks; }
+		double GetUnbiasedRejectedDrops(){ return UnbiasedRejectedDrops; }
+		
 		//AvgScenario
 		void SetAvgWS(double d){ Avg_WS=d;}
 		void SetAvgExact(double d){ Avg_Exact=d ;}
@@ -351,7 +360,10 @@ class Sol
 		double UnbiasedEstimator_WS;
 		double UnbiasedEstimator_Exact;
 		double UnbiasedEstimator_DP;
+		double UnbiasedEstimator_LB;
 		double Avg_trips_400;
+		double UnbiasedRejectedPicks;
+		double UnbiasedRejectedDrops;
 		//AvgScenario
 		double Avg_WS;
 		double Avg_Exact;
