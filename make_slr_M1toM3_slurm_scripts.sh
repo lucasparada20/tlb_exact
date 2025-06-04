@@ -17,6 +17,8 @@ script_count=0
 
 model=1
 
+# For model 2 you require 8hrs and 3hrs for models 1 and 3. 25G for all should suffice
+
 # Loop through each *_nXXX_eXXX.txt file
 for instance_file in "$INSTANCE_DIR"/*_n*_e*.txt; do
     [ -f "$instance_file" ] || continue
